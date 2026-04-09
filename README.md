@@ -85,7 +85,6 @@ aeroform-ai/
 ├── public/
 │   └── index.html     # Frontend - users see this in the browser
 ├── package.json       # Project config and dependencies
-├── .env.example       # Copy to .env and add your Groq key
 ├── .env               # Your local config - never commit this!
 └── .gitignore         # Keeps .env and node\_modules out of git
 ```
