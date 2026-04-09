@@ -86,7 +86,7 @@ aeroform-ai/
 │   └── index.html     # Frontend - users see this in the browser
 ├── package.json       # Project config and dependencies
 ├── .env               # Your local config - never commit this!
-└── package-lock,json 
+└── package-lock.json 
 ```
 
 \---
