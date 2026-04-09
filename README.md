@@ -23,14 +23,14 @@ If you see a version number (e.g. `v20.11.0`) you're good. If not, download and 
 Either clone it with Git:
 
 ```bash
-git clone https://github.com/YOUR\_USERNAME/aeroform-ai.git
-cd aeroform-ai
+git clone https://github.com/868Keturah/AeroForm.git
+cd AeroForm
 ```
 
 Or download the ZIP from GitHub, unzip it, then open your terminal and navigate into the folder:
 
 ```bash
-cd path/to/aeroform-ai
+cd path/to/AeroForm
 ```
 
 ### Step 3 - Install dependencies
