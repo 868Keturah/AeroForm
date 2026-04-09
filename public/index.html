@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AeroForm AI - Indoor Skydiving Form Analyser</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="icon" type="image/x-icon" href="favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', system-ui, sans-serif; background: #080808; color: #e0e0e0; min-height: 100vh; }
+
+  .page { max-width: 680px; margin: 0 auto; padding: 2.5rem 1.25rem 5rem; }
+
+  header { margin-bottom: 2.5rem; }
+  header h1 { font-family: 'Space Mono', monospace; font-size: 20px; font-weight: 700; color: #fff; letter-spacing: -0.3px; }
+  header p { font-size: 13px; color: #666; margin-top: 6px; }
+
+  .drop-zone {
+    border: 1.5px dashed #252525;
+    border-radius: 14px;
+    padding: 4rem 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+  }
+  .drop-zone:hover, .drop-zone.drag { border-color: #1D9E75; background: rgba(29,158,117,.05); }
+  .drop-icon { font-size: 36px; margin-bottom: 12px; }
+  .drop-zone h2 { font-size: 15px; font-weight: 500; color: #ccc; margin-bottom: 6px; }
+  .drop-zone p { font-size: 13px; color: #555; }
+  #file-input { display: none; }
+
+  .preview-section { display: none; margin-top: 1.25rem; }
+  .preview-box { border-radius: 12px; overflow: hidden; border: 1px solid #1e1e1e; background: #0d0d0d; position: relative; }
+  .preview-box img { width: 100%; max-height: 300px; object-fit: contain; display: block; }
+  .preview-name { position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,.7); color: #aaa; font-size: 11px; padding: 4px 10px; border-radius: 20px; font-family: 'Space Mono', monospace; }
+  .change-btn { margin-top: 10px; background: none; border: none; color: #555; font-size: 12px; cursor: pointer; padding: 4px 0; font-family: 'DM Sans', sans-serif; }
+  .change-btn:hover { color: #aaa; }
+
+  .analyse-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; margin-top: 1.25rem;
+    padding: 14px;
+    background: #1D9E75; color: #fff;
+    border: none; border-radius: 10px;
+    font-size: 15px; font-weight: 500; font-family: 'DM Sans', sans-serif;
+    cursor: pointer; transition: background .15s, transform .1s;
+  }
+  .analyse-btn:hover { background: #0F6E56; }
+  .analyse-btn:active { transform: scale(0.99); }
+  .analyse-btn:disabled { background: #142820; color: #2a5040; cursor: not-allowed; transform: none; }
+
+  .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.2); border-top-color: #fff; border-radius: 50%; animation: spin .6s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-box { margin-top: 1rem; background: #1e0a0a; border: 1px solid #4a1a1a; border-radius: 10px; padding: 12px 16px; font-size: 13px; color: #e07070; display: none; }
+
+  .results { margin-top: 1.5rem; display: none; }
+
+  .score-card {
+    background: #0d0d0d; border: 1px solid #1e1e1e; border-radius: 14px;
+    padding: 1.5rem; margin-bottom: 1rem;
+    display: flex; align-items: center; gap: 1.5rem;
+  }
+  .big-num { font-family: 'Space Mono', monospace; font-size: 64px; font-weight: 700; line-height: 1; }
+  .big-num.green { color: #1D9E75; }
+  .big-num.amber { color: #d4861a; }
+  .big-num.red { color: #d94f4f; }
+  .score-label { font-size: 14px; font-weight: 500; color: #ccc; }
+  .score-sub { font-size: 12px; color: #555; margin-top: 3px; }
+  .badge { display: inline-block; margin-top: 10px; padding: 3px 12px; border-radius: 20px; font-size: 11px; font-family: 'Space Mono', monospace; background: #0d1f30; color: #378ADD; border: 1px solid #1a3550; }
+
+  .section { background: #0d0d0d; border: 1px solid #1e1e1e; border-radius: 14px; padding: 1.25rem; margin-bottom: 1rem; }
+  .section-label { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: .8px; font-family: 'Space Mono', monospace; margin-bottom: 12px; }
+
+  .cats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .cat { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 8px; padding: 10px 12px; }
+  .cat-name { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 7px; }
+  .cat-track { height: 4px; background: #1e1e1e; border-radius: 2px; overflow: hidden; margin-bottom: 6px; }
+  .cat-fill { height: 100%; border-radius: 2px; }
+  .cat-val { font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700; }
+
+  .strength { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: #bbb; padding: 5px 0; }
+  .tick { color: #1D9E75; flex-shrink: 0; font-size: 14px; }
+
+  .improvement { border-left: 2px solid #d4861a; padding: 8px 0 8px 14px; margin-bottom: 10px; }
+  .imp-area { font-size: 11px; font-weight: 600; color: #d4861a; margin-bottom: 3px; font-family: 'Space Mono', monospace; text-transform: uppercase; letter-spacing: .4px; }
+  .imp-issue { font-size: 13px; color: #777; margin-bottom: 4px; }
+  .imp-fix { font-size: 13px; color: #378ADD; font-style: italic; }
+
+  .quote { font-size: 14px; color: #bbb; line-height: 1.7; border-left: 3px solid #1D9E75; padding-left: 16px; font-style: italic; }
+  .focus { display: flex; gap: 10px; font-size: 14px; color: #bbb; }
+  .focus-arrow { color: #378ADD; font-family: 'Space Mono', monospace; font-weight: 700; flex-shrink: 0; }
+
+  footer { margin-top: 3rem; text-align: center; font-size: 12px; color: #333; }
+  footer a { color: #444; text-decoration: none; }
+  footer a:hover { color: #666; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <h1>🪂 AeroForm AI</h1>
+    <p>Upload a tunnel photo - get instant AI coaching on your body position</p>
+  </header>
+
+  <div class="drop-zone" id="drop-zone">
+    <div class="drop-icon">📸</div>
+    <h2>Drop your photo here</h2>
+    <p>or click to choose · JPG, PNG, WEBP</p>
+    <input type="file" id="file-input" accept="image/jpeg,image/png,image/webp">
+  </div>
+
+  <div class="preview-section" id="preview-section">
+    <div class="preview-box">
+      <img id="preview-img" src="" alt="Your photo">
+      <span class="preview-name" id="preview-name"></span>
+    </div>
+    <button class="change-btn" id="change-btn">← choose a different photo</button>
+  </div>
+
+  <div class="error-box" id="error-box"></div>
+
+  <button class="analyse-btn" id="analyse-btn" disabled>
+    Analyse my form
+  </button>
+
+  <div class="results" id="results"></div>
+
+  <footer>
+    <p>AeroForm AI · open source on <a href="https://github.com/YOUR_USERNAME/aeroform-ai" target="_blank">GitHub</a> · powered by <a href="https://groq.com" target="_blank">Groq</a></p>
+  </footer>
+
+</div>
+<script>
+  const dropZone   = document.getElementById('drop-zone');
+  const fileInput  = document.getElementById('file-input');
+  const previewSec = document.getElementById('preview-section');
+  const previewImg = document.getElementById('preview-img');
+  const previewName= document.getElementById('preview-name');
+  const changeBtn  = document.getElementById('change-btn');
+  const analyseBtn = document.getElementById('analyse-btn');
+  const errorBox   = document.getElementById('error-box');
+  const resultsEl  = document.getElementById('results');
+
+  let currentFile = null;
+
+  dropZone.addEventListener('click', () => fileInput.click());
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag'));
+  dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('drag'); if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]); });
+  fileInput.addEventListener('change', () => { if (fileInput.files[0]) loadFile(fileInput.files[0]); });
+  changeBtn.addEventListener('click', () => { fileInput.click(); });
+
+  function loadFile(file) {
+    currentFile = file;
+    const url = URL.createObjectURL(file);
+    previewImg.src = url;
+    previewName.textContent = file.name;
+    dropZone.style.display = 'none';
+    previewSec.style.display = 'block';
+    resultsEl.style.display = 'none';
+    errorBox.style.display = 'none';
+    analyseBtn.disabled = false;
+    analyseBtn.innerHTML = 'Analyse my form';
+  }
+
+  function sc(s) { return s >= 8 ? '#1D9E75' : s >= 6 ? '#d4861a' : '#d94f4f'; }
+  function cls(s) { return s >= 8 ? 'green' : s >= 6 ? 'amber' : 'red'; }
+
+  analyseBtn.addEventListener('click', async () => {
+    if (!currentFile) return;
+    analyseBtn.disabled = true;
+    analyseBtn.innerHTML = '<div class="spinner"></div> Analysing...';
+    errorBox.style.display = 'none';
+    resultsEl.style.display = 'none';
+
+    const form = new FormData();
+    form.append('photo', currentFile);
+
+    try {
+      const res = await fetch('/analyse', { method: 'POST', body: form });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `Server error ${res.status}`);
+      renderResults(data);
+    } catch (err) {
+      errorBox.style.display = 'block';
+      errorBox.textContent = 'Error: ' + err.message;
+      analyseBtn.disabled = false;
+      analyseBtn.innerHTML = 'Try again';
+    }
+  });
+
+  function renderResults(r) {
+    const catHtml = Object.entries(r.scores).map(([name, score]) => `
+      <div class="cat">
+        <div class="cat-name">${name.replace(/_/g,' ')}</div>
+        <div class="cat-track"><div class="cat-fill" style="width:${score*10}%;background:${sc(score)}"></div></div>
+        <div class="cat-val" style="color:${sc(score)}">${score}/10</div>
+      </div>`).join('');
+
+    const strengthHtml = r.strengths.map(s =>
+      `<div class="strength"><span class="tick">✓</span>${s}</div>`).join('');
+
+    const improvHtml = r.improvements.map(i => `
+      <div class="improvement">
+        <div class="imp-area">${i.area}</div>
+        <div class="imp-issue">${i.issue}</div>
+        <div class="imp-fix">→ ${i.fix}</div>
+      </div>`).join('');
+
+    resultsEl.innerHTML = `
+      <div class="score-card">
+        <div class="big-num ${cls(r.overall_score)}">${r.overall_score}<span style="font-size:28px;opacity:.3">/10</span></div>
+        <div>
+          <div class="score-label">Overall form score</div>
+          <div class="score-sub">5 body position categories</div>
+          <span class="badge">${r.skill_level_estimate}</span>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-label">Category scores</div>
+        <div class="cats">${catHtml}</div>
+      </div>
+      <div class="section">
+        <div class="section-label">Strengths</div>
+        ${strengthHtml}
+      </div>
+      <div class="section">
+        <div class="section-label">Areas to improve</div>
+        ${improvHtml}
+      </div>
+      <div class="section">
+        <div class="section-label">Coach says</div>
+        <p class="quote">${r.coach_summary}</p>
+      </div>
+      <div class="section">
+        <div class="section-label">Next session focus</div>
+        <div class="focus"><span class="focus-arrow">→</span>${r.next_session_focus}</div>
+      </div>`;
+
+    resultsEl.style.display = 'block';
+    analyseBtn.disabled = false;
+    analyseBtn.innerHTML = 'Analyse another photo';
+  }
+</script>
+</body>
+</html>
